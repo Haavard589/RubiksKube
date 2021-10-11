@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html>
+    <script>
+        
+        let x=500,y=300,z=10;
+    
+        let animalsjon = false;
+        let motsatt = 1;
+        let fart = Math.PI/20;
+        let runde = 0;
+        let rader = [[[8,0]],[[17,9]],[[26,18]]]; 
+        let kolonner = [[[20,18],[11,9],[2,0]],[[23,21],[14,12],[5,3]],[[26,24],[17,15],[8,6]]]; 
+        let aisle    = [[[24,24],[21,21],[18,18],[15,15],[12,12],[9,9],[6,6],[3,3],[0,0]],
+                        [[25,25],[22,22],[19,19],[16,16],[13,13],[10,10],[7,7],[4,4],[1,1]],
+                        [[26,26],[23,23],[20,20],[17,17],[14,14],[11,11],[8,8],[5,5],[2,2]]
+                       ]
+        
+        function Boks(lengde=200,corners=[[1,1,1],[-1,1,1],[-1,-1,1],[1,-1,1],[1,1,-1],[-1,1,-1],[-1,-1,-1],[1,-1,-1]]){
+            this.corners=corners;
+            this.l=lengde;
+        }
+        Boks.prototype.tegning = function(){
+            
+            let maks=-10;
+            for(let i=0;i<this.corners.length;i++){
+                if(this.corners[i][2]>maks){
+                    maks=this.corners[i][2];
+                }
+            }
+            
+            if(this.corners[0][2]!=maks){
+                if(this.corners[3][2]!=maks){
+                    if(this.corners[1][2]!=maks&&this.corners[2][2]!=maks){
+                        kant([this.corners[0],this.corners[1],this.corners[2],this.corners[3]],"rgba(0,0,255,1)",this.l);
+                    }
+                    if(this.corners[7][2]!=maks&&this.corners[4][2]!=maks){
+                        kant([this.corners[0],this.corners[3],this.corners[7],this.corners[4]],"rgba(253,106,2,1)",this.l);
+                    }
+                }
+                if(this.corners[1][2]!=maks&&this.corners[5][2]!=maks&&this.corners[4][2]!=maks){
+                    kant([this.corners[0],this.corners[1],this.corners[5],this.corners[4]],"rgba(255,231,0,1)",this.l);
+                }
+            }
+            if(this.corners[6][2]!=maks){
+                if(this.corners[7][2]!=maks){
+                    if(this.corners[5][2]!=maks&&this.corners[4][2]!=maks){
+                        kant([this.corners[5],this.corners[4],this.corners[7],this.corners[6]],"rgba(0,255,0,1)",this.l);
+                    }
+                    if(this.corners[2][2]!=maks&&this.corners[3][2]!=maks){
+                        kant([this.corners[7],this.corners[6],this.corners[2],this.corners[3]],"rgba(255,255,255,1)",this.l);
+                    }
+                }
+                if(this.corners[1][2]!=maks&&this.corners[2][2]!=maks&&this.corners[5][2]!=maks){
+                    kant([this.corners[1],this.corners[2],this.corners[6],this.corners[5]],"rgba(255,0,0,1)",this.l);
+                }
+            }
+            
+            
+        }
+        
+        function inList(liste,variabel){
+            for(let i=0;i<liste.length;i++){
+                let funnet = 0;
+                for(let j=0;j<liste[i].length;j++){
+                    if(Math.round(liste[i][j])==variabel[j]){
+                        funnet++;
+                    }
+                    if(funnet==variabel.length){
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        function sorter(){
+            let synlig = [];
+            
+            for(let i=1;i>-2;i--){
+                for(let j=1;j>-2;j--){
+                    for(let k=-1;k<2;k++){
+                        for(let l=0;l<bokser.length;l++){
+                            if(inList(bokser[l].corners,[1+i*2,1+j*2,1+k*2])
+                                &&inList(bokser[l].corners,[-1+i*2,1+j*2,1+k*2])
+                                &&inList(bokser[l].corners,[-1+i*2,-1+j*2,1+k*2])
+                                &&inList(bokser[l].corners,[1+i*2,-1+j*2,1+k*2])
+                                &&inList(bokser[l].corners,[1+i*2,1+j*2,-1+k*2])){
+                                    synlig.push(bokser[l]);
+                                    break;
+                            }
+                                
+                        }
+                    }
+                }
+            }
+            return synlig;
+        }
+        
+        function bakgrunn(){
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            ctx.beginPath();
+            ctx.save();
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = "rgba(255,165,165,1)";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+        }
+        function tegnKube(kuber=[[26,0]]){
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            ctx.beginPath();
+            
+            for(let i=0;i<bokser.length;i++){
+                bokser[i].corners=matriseMultiplikasjon(ry(Math.PI/6),bokser[i].corners);
+            }
+            
+            for(let i=0;i<bokser.length;i++){
+                bokser[i].corners=matriseMultiplikasjon(rx(Math.PI/6),bokser[i].corners);
+            }
+            
+            
+            for(let j=0;j<kuber.length;j++){
+                for(let i=kuber[j][0];i>=kuber[j][1];i--){
+                    bokser[i].tegning();
+                }
+            }
+            
+            for(let i=0;i<bokser.length;i++){
+                bokser[i].corners=matriseMultiplikasjon(rx(-Math.PI/6),bokser[i].corners);
+            }
+            for(let i=0;i<bokser.length;i++){
+                bokser[i].corners=matriseMultiplikasjon(ry(-Math.PI/6),bokser[i].corners);
+            }
+        }
+        function kant(punkt,farge="rgba(233,0,0,0.5)",l=100){
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            ctx.beginPath();
+            ctx.fillStyle = farge;
+            ctx.lineWidth=5;
+            ctx.moveTo(x+punkt[0][0]*l/**Math.atan(z/(punkt[0][2]+z))*/,y-punkt[0][1]*l/**Math.atan(z/(punkt[0][2]+z))*/);
+            for(let i=1;i<punkt.length;i++){
+                ctx.lineTo(x+punkt[i][0]*l/**Math.atan(z/(punkt[i][2]+z))*/,y-punkt[i][1]*l/**Math.atan(z/(punkt[i][2]+z))*/);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+        
+        function rx(vinkel){
+            return [
+                [1,0,0],
+                [0,Math.cos(vinkel),-Math.sin(vinkel)],
+                [0,Math.sin(vinkel),Math.cos(vinkel)]
+            ];
+        }
+        function ry(vinkel){
+            return [
+                [Math.cos(vinkel),0,-Math.sin(vinkel)],
+                [0,1,0],
+                [Math.sin(vinkel),0,Math.cos(vinkel)]
+            ];
+        }
+        function rz(vinkel){
+            return [
+                [Math.cos(vinkel),-Math.sin(vinkel),0],
+                [Math.sin(vinkel),Math.cos(vinkel),0],
+                [0,0,1]
+            ];
+        }
+        
+        function matriseMultiplikasjon(v,w){
+            let m=[];
+            for(let i=0;i<w.length;i++){
+                m[i] = [];
+                for(let j=0;j<v[0].length;j++){
+                    m[i][j] = 0;
+                    for(let k=0;k<v.length;k++){
+                        m[i][j] += v[k][j]*w[i][k];
+                    }
+                }
+            }
+            return m;
+        }
+         
+        function snurr(akse,kuber,kolonne,retning,slutt=0){
+            animalsjon=true;
+            bakgrunn();
+
+            tegnKube(kuber[2]);
+            tegnKube(kuber[1]);
+            tegnKube(kuber[0]);
+             
+            if(slutt>(motsatt==retning?Math.PI/2:0)+(akse!=rz?Math.PI/6:Math.PI/3.9)*(motsatt==retning?-1:1)-fart&&
+               slutt<=(motsatt==retning?Math.PI/2:0)+(akse!=rz?Math.PI/6:Math.PI/3.9)*(motsatt==retning?-1:1)){
+                
+                for(let i=0;i<kuber[kolonne].length;i++){
+                    for(let j=kuber[kolonne][i][0];j>kuber[kolonne][i][1]-1;j--){
+                        bokser[j].corners=matriseMultiplikasjon(akse((Math.PI/2-slutt)*motsatt*retning),bokser[j].corners);
+                    }
+                }
+                
+                bokser = sorter();
+                for(let i=0;i<kuber[kolonne].length;i++){
+                    for(let j=kuber[kolonne][i][0];j>kuber[kolonne][i][1]-1;j--){
+                        bokser[j].corners=matriseMultiplikasjon(akse((-Math.PI/2+slutt)*motsatt*retning),bokser[j].corners);
+                    }
+                }
+            }
+
+            for(let i=0;i<kuber[kolonne].length;i++){
+                for(let j=kuber[kolonne][i][0];j>kuber[kolonne][i][1]-1;j--){
+                    bokser[j].corners=matriseMultiplikasjon(akse(fart*motsatt*retning),bokser[j].corners);
+                }
+            }
+            slutt+=fart;
+   
+            if(slutt<Math.PI/2+fart){
+                var loopTimer = setTimeout(snurr,30,akse,kuber,kolonne,retning,slutt);
+            }else{
+                for(let i=0;i<kuber[kolonne].length;i++){
+                    for(let j=kuber[kolonne][i][0];j>kuber[kolonne][i][1]-1;j--){
+                        bokser[j].corners=matriseMultiplikasjon(akse((Math.PI/2-slutt)*motsatt*retning),bokser[j].corners);
+                    }
+                }
+                animalsjon=false;
+                runde++;
+                main();  
+            }
+        }   
+        function X(){snurr(rx,[[[26,0]]],0,-1)}
+        function Z(){snurr(rz,[[[26,0]]],0,1)}
+        function Y(){snurr(ry,[[[26,0]]],0,1)}
+        function F(){snurr(rz,aisle,0,1)}
+        function S(){snurr(rz,aisle,1,1)}
+        function B(){snurr(rz,aisle,2,-1)}
+        function R(){snurr(rx,rader,0,-1)}
+        function M(){snurr(rx,rader,1,-1)}
+        function L(){snurr(rx,rader,2,1)}
+        function U(){snurr(ry,kolonner,0,1)}
+        function E(){snurr(ry,kolonner,1,1)}
+        function D(){snurr(ry,kolonner,2,-1)}
+        
+        bokser = [];
+        for(let i=-1;i<2;i++){
+            for(let j=1;j>-2;j--){
+                for(let k=-1;k<2;k++){
+                    bokser.push(new Boks(50,[[1+i*2,1+j*2,1+k*2],[-1+i*2,1+j*2,1+k*2],[-1+i*2,-1+j*2,1+k*2],[1+i*2,-1+j*2,1+k*2],[1+i*2,1+j*2,-1+k*2],[-1+i*2,1+j*2,-1+k*2],[-1+i*2,-1+j*2,-1+k*2],[1+i*2,-1+j*2,-1+k*2]]));
+                }
+            }
+        }
+       
+        function bytt(){
+            if(motsatt==-1){
+                document.getElementById("hm").innerHTML="*";
+            }else{
+                document.getElementById("hm").innerHTML="-";
+            }
+            motsatt*=-1;
+            runde++;
+            main();
+        }
+        
+        //let trekk = [bytt,U,L,U,F,R,R,B,bytt,R,F,U,B,B,U,bytt,B,bytt,L,bytt,U,F,U,R,bytt,F];
+        //let trekk = [F,L,F,bytt,U,bytt,R,U,F,F,L,L,bytt,U,L,bytt,B,bytt,D,B,L,L,bytt,U];
+        //let trekk = [F,F,bytt,R,B,bytt,U,bytt,R,bytt,L,bytt,F,bytt,L,bytt,F,bytt,B,bytt,D,bytt,R,B,L,L];
+        //let trekk = [F,U,F,R,L,L,B,bytt,D,bytt,R,D,D,L,bytt,D,bytt,B,R,R,L,F,U,F];
+        //let trekk = [bytt,U,L,bytt,U,L,bytt,F,bytt,L,F,bytt,L];
+        let trekk = []
+        let muligetrekk = [R,M,L,U,E,D,F,S,B];
+        /*
+        let trekk = [];
+        for(let i=0;i<20;i++){
+            motsatt=Math.floor(Math.random()*2)-1;
+            let verdi=Math.floor(Math.random()*8);
+            trekk.push(muligetrekk[verdi]);
+        }
+       */
+        function main(){
+            
+            if(!animalsjon){
+                bokser = sorter();
+                bakgrunn();
+                tegnKube();
+                trekk[runde]();
+            }
+        }
+        
+         document.onkeydown = function(event) { 
+            /*
+            if(!animalsjon){
+                trekk = [];
+                runde=0;
+            }
+            */
+                if(event.keyCode == 39){
+                    trekk.push(Z);
+                    main();
+                }else if(event.keyCode == 37){
+                    trekk.push(Y);
+                    main();
+                }else if(event.keyCode == 38){
+                    trekk.push(X);
+                    main();
+                }else if(event.keyCode == 82){
+                    trekk.push(R);
+                    main();
+                }else if(event.keyCode == 76){
+                    trekk.push(L);
+                    main();
+                }else if(event.keyCode == 85){
+                    trekk.push(U);
+                    main();
+                }else if(event.keyCode == 68){
+                    trekk.push(D);
+                    main();
+                }else if(event.keyCode == 69){
+                    trekk.push(E);
+                    main();
+                }else if(event.keyCode == 70){
+                    trekk.push(F);
+                    main();
+                }else if(event.keyCode == 83){
+                    trekk.push(S);
+                    main();
+                }else if(event.keyCode == 66){
+                    trekk.push(B);
+                    main();
+                }else if(event.keyCode == 77){
+                    trekk.push(M);
+                    main();
+                }else if(event.keyCode == 16){
+                    trekk.push(bytt);
+                    main();
+                }else if(event.keyCode == 49){
+                    motsatt=-1;
+                    trekk.push(U);
+                    trekk.push(L);
+                    trekk.push(bytt);
+                    trekk.push(U);
+                    trekk.push(L);
+                    trekk.push(bytt);
+                    trekk.push(F);
+                    trekk.push(bytt);
+                    trekk.push(L);
+                    trekk.push(F);
+                    trekk.push(bytt);
+                    trekk.push(L);
+                    main();
+                }else if(event.keyCode == 50){
+                    motsatt=1;
+                    trekk.push(U);
+                    trekk.push(R);
+                    trekk.push(bytt);
+                    trekk.push(U);
+                    trekk.push(R);
+                    trekk.push(bytt);
+                    trekk.push(F);
+                    trekk.push(bytt);
+                    trekk.push(R);
+                    trekk.push(F);
+                    trekk.push(bytt);
+                    trekk.push(R);
+                    main();
+                }else if(event.keyCode == 51){
+                    motsatt=1;
+                    trekk.push(F);
+                    trekk.push(R);
+                    trekk.push(U);
+                    trekk.push(bytt);
+                    trekk.push(R);
+                    trekk.push(U);
+                    trekk.push(F);
+                    
+                    main();
+                }
+            }
+        
+    </script>
+    <body onload="main()">
+        <canvas id="canvas" width="1000" height="550px"></canvas>
+        <p id="hm"></p>
+    </body>
+</html>
